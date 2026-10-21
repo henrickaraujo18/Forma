@@ -15,3 +15,12 @@ Aplicativo pessoal para iPhone feito em SwiftUI. Este repositório contém o pro
 
 ## Compilação
 O workflow `Build Forma iOS` roda automaticamente ao enviar alterações para `main` e também pode ser iniciado manualmente em Actions.
+
+
+## Instalação pessoal no iPhone (Windows)
+1. Aguarde o artefato `Forma-unsigned-ipa` ficar disponível em Actions após uma compilação concluída com sucesso.
+2. Baixe o ZIP do artefato e extraia `Forma-unsigned.ipa`.
+3. No Windows, use o Sideloadly oficial para assinar e instalar o IPA no iPhone conectado por USB, com o iPhone desbloqueado e a opção de confiar neste computador aceita.
+4. Entre somente no Sideloadly com seu próprio Apple ID; não compartilhe senha ou código de verificação com terceiros. Com conta gratuita, a assinatura normalmente precisa ser renovada periodicamente.
+
+O IPA sem assinatura não pode ser instalado diretamente; a assinatura local é uma etapa obrigatória. Este protótipo ainda não integra HealthKit nem a balança OKOK.
