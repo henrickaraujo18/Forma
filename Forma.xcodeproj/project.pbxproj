@@ -1,0 +1,28 @@
+// !$*UTF8*$!
+{
+ archiveVersion = 1;
+ classes = {};
+ objectVersion = 56;
+ objects = {
+  A10000000000000000000001 /* Project object */ = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastUpgradeCheck = 1600; TargetAttributes = {A10000000000000000000002 = {CreatedOnToolsVersion = 16.0; }; }; }; compatibilityVersion = "Xcode 14.0"; mainGroup = A10000000000000000000003; productRefGroup = A10000000000000000000004; projectDirPath = ""; projectRoot = ""; targets = (A10000000000000000000002,); };
+  A10000000000000000000003 = {isa = PBXGroup; children = (A10000000000000000000005, A10000000000000000000006, A10000000000000000000007); sourceTree = "<group>"; };
+  A10000000000000000000004 = {isa = PBXGroup; children = (A10000000000000000000009,); name = Products; sourceTree = "<group>"; };
+  A10000000000000000000005 /* FormaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormaApp.swift; sourceTree = "<group>"; };
+  A10000000000000000000006 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+  A10000000000000000000007 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+  A10000000000000000000009 /* Forma.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Forma.app; sourceTree = BUILT_PRODUCTS_DIR; };
+  A10000000000000000000011 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000012, A10000000000000000000013,); runOnlyForDeploymentPostprocessing = 0; };
+  A10000000000000000000012 = {isa = PBXBuildFile; fileRef = A10000000000000000000005; };
+  A10000000000000000000013 = {isa = PBXBuildFile; fileRef = A10000000000000000000006; };
+  A10000000000000000000014 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  A10000000000000000000015 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  A10000000000000000000002 /* Forma */ = {isa = PBXNativeTarget; buildConfigurationList = A10000000000000000000016; buildPhases = (A10000000000000000000011, A10000000000000000000014, A10000000000000000000015,); buildRules = (); dependencies = (); name = Forma; productName = Forma; productReference = A10000000000000000000009; productType = "com.apple.product-type.application"; };
+  A10000000000000000000010 = {isa = XCConfigurationList; buildConfigurations = (A10000000000000000000017, A10000000000000000000018,); defaultConfigurationName = Release; };
+  A10000000000000000000016 = {isa = XCConfigurationList; buildConfigurations = (A10000000000000000000019, A10000000000000000000020,); defaultConfigurationName = Release; };
+  A10000000000000000000017 /* Project Debug */ = {isa = XCBuildConfiguration; buildSettings = {IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+  A10000000000000000000018 /* Project Release */ = {isa = XCBuildConfiguration; buildSettings = {IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+  A10000000000000000000019 /* Forma Debug */ = {isa = XCBuildConfiguration; buildSettings = {GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = br.com.forma.pessoal; PRODUCT_NAME = Forma; SWIFT_VERSION = 5.0; IPHONEOS_DEPLOYMENT_TARGET = 17.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+  A10000000000000000000020 /* Forma Release */ = {isa = XCBuildConfiguration; buildSettings = {GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = br.com.forma.pessoal; PRODUCT_NAME = Forma; SWIFT_VERSION = 5.0; IPHONEOS_DEPLOYMENT_TARGET = 17.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+ };
+ rootObject = A10000000000000000000001;
+}
