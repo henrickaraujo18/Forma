@@ -7,7 +7,7 @@ export const NAV=[
 const box=(title,sub,inside,cls="")=>`<section class="card ${cls}"><div class="card-header"><div><h2>${title}</h2>${sub?`<p>${sub}</p>`:""}</div></div>${inside}</section>`;
 const empty=(icon,title,detail)=>`<div class="empty"><div class="em-icon">${icon}</div><strong>${title}</strong><p>${detail}</p></div>`;
 const kpi=(label,value,suffix,hint,icon)=>`<div class="card kpi"><div class="label"><span>${label}</span><span class="icon-chip">${icon}</span></div><div class="value">${value}<span class="suffix"> ${suffix||""}</span></div><div class="hint">${hint||""}</div></div>`;
-const btn=(label,action,cls="secondary",extra="")=>`<button class="btn ${cls}" data-action="${action}" ${extra}>${label}</button>`;
+const btn=(label,action,cls="secondary",extra="")=>`<button type="button" class="btn ${cls}" data-action="${action}" ${extra}>${label}</button>`;
 const header=(eye,title,sub,actions="")=>`<div class="header-row"><div><div class="eyebrow">${eye}</div><h1>${title}</h1><p>${sub}</p></div>${actions?`<div class="actions">${actions}</div>`:""}</div>`;
 export const field=(label,name,value="",type="number",step="0.1",extra="")=>`<label class="field">${label}<input name="${name}" type="${type}" value="${attr(value??"")}" ${type==="number"?`step="${step}" min="0"`:""} ${extra}/></label>`;
 export function navigation(current){
