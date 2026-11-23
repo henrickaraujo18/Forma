@@ -1,0 +1,23 @@
+name: Forma Web checks
+on:
+  push:
+    paths:
+      - 'web/**'
+      - '.github/workflows/forma-web.yml'
+  pull_request:
+    paths:
+      - 'web/**'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: npm run check
+        working-directory: web
+      - name: Unit tests
+        run: npm test
+        working-directory: web
