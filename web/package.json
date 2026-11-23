@@ -6,6 +6,6 @@
   "description": "Aplicativo PWA local-first de treino e evolução corporal",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check app.js && node --check ui.js && node --check core.js && node --check data.js && node --check sw.js"
+    "check": "node --check app.js && node --check ui.js && node --check core.js && node --check data.js && node --check cloud.js && node --check cloud-config.js && node --check sw.js"
   }
 }
