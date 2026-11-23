@@ -6,14 +6,14 @@ test.beforeEach(async({page})=>{
   if(await gate.isVisible())await page.locator("#offline-button").click();
 });
 test("carrega painel e as duas fichas",async({page})=>{
- await expect(page.locator("h1")).toContainText("Henrick");
+ await expect(page.locator("#view h1")).toContainText("Henrick");
  await expect(page.locator("#side-nav")).toContainText("Treinar");
  await page.locator("#side-nav button[data-page=train]").click();
  await expect(page.locator(".routine-card")).toHaveCount(5);
  await page.locator("#profile-select").selectOption("cecilia");
  await page.locator("#side-nav button[data-page=train]").click();
  await expect(page.locator(".routine-card")).toHaveCount(4);
- await expect(page.locator("h1")).toContainText("Treinos");
+ await expect(page.locator("#view h1")).toContainText("Treinos");
 });
 test("salva pesagem, calcula IMC e mantém dado após recarregar",async({page})=>{
  await page.locator("#side-nav button[data-page=settings]").click();
@@ -34,7 +34,7 @@ test("salva pesagem, calcula IMC e mantém dado após recarregar",async({page})=
 test("registra treino com séries, cronômetro, histórico e gráficos",async({page})=>{
  await page.locator("#side-nav button[data-page=train]").click();
  await page.locator(".routine-card").first().locator('[data-action="start"]').click();
- await expect(page.locator("h1")).toContainText("Treino A");
+ await expect(page.locator("#view h1")).toContainText("Treino A");
  await page.locator('input[data-session-field="weight"][data-ex="0"][data-set="0"]').fill("20");
  await page.locator('input[data-session-field="reps"][data-ex="0"][data-set="0"]').fill("10");
  await page.locator('input[data-session-done][data-ex="0"][data-set="0"]').check();
@@ -47,7 +47,7 @@ test("registra treino com séries, cronômetro, histórico e gráficos",async({p
  await page.locator("#side-nav button[data-page=history]").click();
  await expect(page.locator(".status-list")).toContainText("Treino A");
  await page.locator("#side-nav button[data-page=analytics]").click();
- await expect(page.locator("h1")).toContainText("Análises");
+ await expect(page.locator("#view h1")).toContainText("Análises");
  await expect(page.locator(".kpis")).toContainText("1");
 });
 test("persiste separadamente os dois perfis",async({page})=>{
