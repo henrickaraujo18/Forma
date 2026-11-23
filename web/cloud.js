@@ -61,8 +61,8 @@ async function send(path,{method="GET",body,token,headers={},retry=true}={}){
  return data;
 }
 export class FormaCloud{
- constructor({onData=()=>{},onStatus=()=>{}}={}){
-  this.onData=onData;this.onStatus=onStatus;this.session=getToken();this.user=null;
+ constructor({onData=()=>{},onStatus=()=>{},getInitialData=()=>initial()}={}){
+  this.onData=onData;this.onStatus=onStatus;this.getInitialData=getInitialData;this.session=getToken();this.user=null;
   this.workspace=null;this.role=null;this.revision=null;this.workspaces=[];
   this.pending=null;this.writing=false;this.syncTimer=null;this.pollTimer=null;
  }
@@ -96,7 +96,7 @@ export class FormaCloud{
   try{
    await this.accessToken();
    this.user=await this.authorized("/auth/v1/user");
-   await this.open();
+   await this.open(null,this.getInitialData());
    return true;
   }catch(e){
    this.tell("error","Sessão em nuvem indisponível: "+e.message);
@@ -195,12 +195,12 @@ export class FormaCloud{
       this.revision=current.revision;
     }
     const nextRevision=current.revision+1;
-    const rows=await this.authorized("/rest/v1/forma_data?select=revision",{method:"PATCH",
+    const endpoint="/rest/v1/forma_data?select=revision&workspace_id=eq."+encodeURIComponent(this.workspace)+"&revision=eq."+current.revision;
+    const rows=await this.authorized(endpoint,{
+      method:"PATCH",
       body:{document:snapshot,revision:nextRevision,updated_at:new Date().toISOString(),updated_by:this.user.id},
-      headers:{Prefer:"return=representation"},
-      ...{},
-    }.constructor===Object?{method:"PATCH",body:{document:snapshot,revision:nextRevision,updated_at:new Date().toISOString(),updated_by:this.user.id},headers:{Prefer:"return=representation"}}:{});
-    // A atualização acima é sequencial; o filtro CAS é aplicado abaixo na versão final do endpoint.
+      headers:{Prefer:"return=representation"}
+    });
     if(!rows?.length){
        const latest=await this.fetchState();
        this.revision=latest.revision;
