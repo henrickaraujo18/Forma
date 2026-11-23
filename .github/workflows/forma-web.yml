@@ -7,6 +7,8 @@ on:
   pull_request:
     paths:
       - 'web/**'
+permissions:
+  contents: read
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -21,3 +23,18 @@ jobs:
       - name: Unit tests
         run: npm test
         working-directory: web
+      - name: Install browser testing
+        run: |
+          npm install --no-save --package-lock=false @playwright/test@1.56.1
+          npx playwright install chromium --with-deps
+        working-directory: web
+      - name: Browser end-to-end tests
+        run: npx playwright test
+        working-directory: web
+      - name: Save failed screenshots and traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forma-web-e2e-artifacts
+          path: |
+            web/test-results/
