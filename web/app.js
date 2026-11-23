@@ -37,11 +37,7 @@ function findRoutine(rid){return (store.routines[current]||[]).find(x=>x.id===ri
 function start(rid){
  const p=profile(),r=findRoutine(rid);
  if(!r){notify("Rotina não encontrada.");return;}
- if(store.active){
-  if(store.active.profile===current){closeModal();navigate("session");notify("Sessão em andamento recuperada.");}
-  else notify("Existe um treino em andamento no outro perfil. Finalize ou descarte antes de iniciar outro.");
-  return;
- }
+ if(getActive()){closeModal();navigate("session");notify("Sessão em andamento recuperada.");return;}
  const previous=sorted(store.sessions.filter(x=>x.profile===current&&x.routineId===r.id),"date")[0];
  const exercises=JSON.parse(JSON.stringify(r.exercises)).map((e,i)=>({
   ...e,sets:e.sets.map((set,j)=>{
@@ -72,7 +68,7 @@ function startTimer(seconds){
  if(!getActive()||!store.preferences.autoTimer||seconds<=0)return;
  getActive().restUntil=Date.now()+seconds*1000;commit();tickTimer();
 }
-function stopTimer(){if(store.active){getActive().restUntil=null;commit();}tickTimer();}
+function stopTimer(){if(getActive()){getActive().restUntil=null;commit();}tickTimer();}
 function tickTimer(){
  const s=getActive(),until=s?.restUntil;
  if(!until){$("timer-banner").hidden=true;return;}
