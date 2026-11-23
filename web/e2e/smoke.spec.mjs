@@ -1,0 +1,83 @@
+import {test,expect} from "@playwright/test";
+test.beforeEach(async({page})=>{
+  page.on("pageerror",error=>{throw error;});
+  await page.goto("/",{waitUntil:"networkidle"});
+});
+test("carrega painel e as duas fichas",async({page})=>{
+ await expect(page.locator("h1")).toContainText("Henrick");
+ await expect(page.locator("#side-nav")).toContainText("Treinar");
+ await page.locator("#side-nav button[data-page=train]").click();
+ await expect(page.locator(".routine-card")).toHaveCount(5);
+ await page.locator("#profile-select").selectOption("cecilia");
+ await page.locator("#side-nav button[data-page=train]").click();
+ await expect(page.locator(".routine-card")).toHaveCount(4);
+ await expect(page.locator("h1")).toContainText("Treinos");
+});
+test("salva pesagem, calcula IMC e mantém dado após recarregar",async({page})=>{
+ await page.locator("#side-nav button[data-page=settings]").click();
+ await page.locator('#profile-form [name="height"]').fill("182");
+ await page.locator('#profile-form [name="height"]').press("Tab");
+ await page.locator("#profile-form button[type=submit]").click();
+ await page.locator("#side-nav button[data-page=body]").click();
+ await page.locator('#body-form [name="weight"]').fill("96");
+ await page.locator('#body-form [name="waist"]').fill("92");
+ await page.locator('#body-form button[type=submit]').click();
+ await expect(page.locator(".kpis")).toContainText("29,0");
+ await expect(page.locator(".kpis")).toContainText("96,0");
+ await page.reload();
+ await page.locator("#side-nav button[data-page=body]").click();
+ await expect(page.locator(".kpis")).toContainText("29,0");
+ await expect(page.locator("table.data-table tbody tr")).toHaveCount(1);
+});
+test("registra treino com séries, cronômetro, histórico e gráficos",async({page})=>{
+ await page.locator("#side-nav button[data-page=train]").click();
+ await page.locator(".routine-card").first().locator('[data-action="start"]').click();
+ await expect(page.locator("h1")).toContainText("Treino A");
+ await page.locator('input[data-session-field="weight"][data-ex="0"][data-set="0"]').fill("20");
+ await page.locator('input[data-session-field="reps"][data-ex="0"][data-set="0"]').fill("10");
+ await page.locator('input[data-session-done][data-ex="0"][data-set="0"]').check();
+ await expect(page.locator(".session-head")).toContainText("1 de");
+ await page.reload();
+ await expect(page.locator(".session-head")).toContainText("1 de");
+ await page.locator('[data-action="finishSession"]').click();
+ await page.locator("#finish-form button[type=submit]").click();
+ await expect(page.locator(".kpis")).toContainText("1");
+ await page.locator("#side-nav button[data-page=history]").click();
+ await expect(page.locator(".status-list")).toContainText("Treino A");
+ await page.locator("#side-nav button[data-page=analytics]").click();
+ await expect(page.locator("h1")).toContainText("Análises");
+ await expect(page.locator(".kpis")).toContainText("1");
+});
+test("persiste separadamente os dois perfis",async({page})=>{
+ await page.locator("#side-nav button[data-page=body]").click();
+ await page.locator('#body-form [name="weight"]').fill("96");
+ await page.locator('#body-form button[type=submit]').click();
+ await page.locator("#profile-select").selectOption("cecilia");
+ await page.locator("#side-nav button[data-page=body]").click();
+ await expect(page.locator(".kpis")).not.toContainText("96,0");
+ await page.locator('#body-form [name="weight"]').fill("65");
+ await page.locator('#body-form button[type=submit]').click();
+ await page.locator("#profile-select").selectOption("henrick");
+ await page.locator("#side-nav button[data-page=body]").click();
+ await expect(page.locator(".kpis")).toContainText("96,0");
+ await expect(page.locator(".kpis")).not.toContainText("65,0");
+});
+test("backup JSON baixa e inclui registros de ambos os perfis",async({page})=>{
+ await page.locator("#side-nav button[data-page=body]").click();
+ await page.locator('#body-form [name="weight"]').fill("96");
+ await page.locator('#body-form button[type=submit]').click();
+ await page.locator("#side-nav button[data-page=settings]").click();
+ const download=page.waitForEvent("download");
+ await page.locator('[data-action="backup"]').click();
+ const d=await download;
+ expect(d.suggestedFilename()).toContain("forma-fitness-backup");
+});
+test("funciona no viewport de iPhone",async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.reload();
+ await expect(page.locator("#mobile-nav")).toBeVisible();
+ await page.locator("#mobile-nav button[data-page=train]").click();
+ await expect(page.locator(".routine-card")).toHaveCount(5);
+ await page.locator(".routine-card").first().locator('[data-action="start"]').click();
+ await expect(page.locator(".session-head")).toBeVisible();
+});
