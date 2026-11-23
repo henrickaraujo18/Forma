@@ -1,7 +1,8 @@
+import {demoFor,validVideoUrl} from "./media.js";
 import {FormaCloud,mergeStores} from "./cloud.js";
 import {STARTER_ROUTINES} from "./data.js";
 import {load,save,id,today,dateAt,dateAt as _dateAt,num,fmt,esc,niceDate,attr,sorted,download,csvSessions,csvMeasurements,validateImport,statsSession,completedSets} from "./core.js";
-import {NAV,navigation,mobileNav,view,bodyModal,cardioModal,detailRoutine,sessionDetail,editRoutineModal,exerciseModal,seriesEditRow,confirmModal} from "./ui.js";
+import {NAV,navigation,mobileNav,view,bodyModal,cardioModal,detailRoutine,sessionDetail,editRoutineModal,exerciseModal,seriesEditRow,confirmModal,demoMarkup} from "./ui.js";
 let store=load();
 let current="henrick";try{current=localStorage.getItem("forma.currentProfile")||"henrick";}catch{}
 if(!store.profiles.some(x=>x.id===current))current=store.profiles[0]?.id||"henrick";
@@ -16,7 +17,18 @@ function commit(){
  if(cloud?.signedIn&&cloud.workspace)cloud.queue(store);
 }
 function notify(message){const t=$("toast");t.textContent=message;t.classList.add("visible");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("visible"),3400);}
-function navigate(page){ui.page=page;render();window.scrollTo({top:0,behavior:"instant"});}
+function navigate(page){
+ const update=()=>{ui.page=page;render();window.scrollTo({top:0,behavior:"instant"});};
+ const motionOK=!window.matchMedia("(prefers-reduced-motion: reduce)").matches&&document.visibilityState==="visible";
+ if(motionOK&&typeof document.startViewTransition==="function"){
+  try{document.startViewTransition(update);return;}catch{}
+ }
+ update();
+ if(motionOK){
+  const viewEl=$("view");viewEl.classList.remove("page-enter");
+  void viewEl.offsetWidth;viewEl.classList.add("page-enter");
+ }
+}
 
 function cloudInfo(){
  return {connected:Boolean(cloud?.signedIn&&cloud.workspace),status:cloudStatusLabel,
@@ -84,6 +96,55 @@ async function cloudLogout(){
  }catch(err){notify("Erro ao sair: "+err.message);}
 }
 
+let demoObserver=null;
+function hydrateDemos(){
+ if(demoObserver){demoObserver.disconnect();demoObserver=null;}
+ const videos=[...document.querySelectorAll("video[data-demo-src]")];
+ const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+ const saveData=navigator.connection?.saveData===true;
+ const enable=(video,visible)=>{
+  if(!visible||document.hidden){
+   video.pause();return;
+  }
+  if(!video.src)video.src=video.dataset.demoSrc;
+  if(!reduced&&!saveData)video.play().catch(()=>{});
+ };
+ if("IntersectionObserver" in window){
+  demoObserver=new IntersectionObserver(entries=>{
+   for(const entry of entries)enable(entry.target,entry.isIntersecting&&entry.intersectionRatio>=.08);
+  },{rootMargin:"110px 0px 110px 0px",threshold:[0,.08,.6]});
+  for(const video of videos)demoObserver.observe(video);
+ }else for(const video of videos)enable(video,true);
+ for(const video of videos){
+  video.addEventListener("error",()=>{
+    const host=video.closest(".demo-screen");
+    if(host&&!host.querySelector(".demo-error")){
+      const message=document.createElement("div");
+      message.className="demo-error";
+      message.textContent="Não foi possível carregar o vídeo. Verifique a conexão ou tente novamente.";
+      host.appendChild(message);
+    }
+  },{once:true});
+ }
+}
+function findDemoExercise(name){
+ if(!name)return null;
+ return getActive()?.exercises?.find(e=>e.name===name)||
+  (store.routines[current]||[]).flatMap(r=>r.exercises).find(e=>e.name===name)||
+  store.sessions.filter(s=>s.profile===current).flatMap(s=>s.exercises||[]).find(e=>e.name===name)||null;
+}
+function watchDemo(name){
+ const ex=findDemoExercise(name);
+ if(!ex){notify("Demonstração não encontrada.");return;}
+ const demo=demoFor(ex);
+ const notice=demo?.variant?"O vídeo/animação mostra uma variação; execute de acordo com a sua ficha.":"Observe o movimento e respeite a prescrição da sua ficha.";
+ const source=demo?.source?.startsWith("https://")?
+    `<a href="${attr(demo.source)}" target="_blank" rel="noopener noreferrer">Fonte da mídia · licença CC0 ↗</a>`:"";
+ openModal(`<div class="demo-modal-header"><span class="eyebrow">EXECUÇÃO DO EXERCÍCIO</span><h2>${esc(ex.name)}</h2><p>${esc(notice)}</p></div>
+  ${demoMarkup(ex,{large:true})}
+  <p class="demo-footnote">Demonstração visual de 5–8 segundos; as animações de dois quadros completam ciclos de 8 segundos. Conteúdo ilustrativo, sem substituir a orientação do treinador. ${source}</p>
+  <footer><button class="btn primary" type="button" data-action="closeModal">Voltar ao treino</button></footer>`,true);
+}
 function render(){
  const p=profile();if(!p)return;
  ui.cloud=cloudInfo();
@@ -97,16 +158,18 @@ function render(){
  $("side-nav").innerHTML=navigation(ui.page);
  $("mobile-nav").innerHTML=mobileNav(ui.page);
  $("view").innerHTML=view(store,p,ui);
+ hydrateDemos();
  document.title=pageName+" · Forma Fitness";
  tickTimer();
 }
 function openModal(markup,large=false){
  const modal=$("modal");modal.innerHTML=markup;modal.className="modal"+(large?" large":"");
  $("modal-backdrop").hidden=false;
+ hydrateDemos();
  const first=modal.querySelector("input:not([type=hidden]),select,button");
  if(first)requestAnimationFrame(()=>first.focus());
 }
-function closeModal(){$("modal-backdrop").hidden=true;$("modal").innerHTML="";}
+function closeModal(){for(const video of $("modal").querySelectorAll("video"))video.pause();$("modal-backdrop").hidden=true;$("modal").innerHTML="";hydrateDemos();}
 function findRoutine(rid){return (store.routines[current]||[]).find(x=>x.id===rid)}
 function start(rid){
  const p=profile(),r=findRoutine(rid);
@@ -209,7 +272,8 @@ function submitExercise(form){
   weight:"",reps:"",rpe:"",done:false
  }));
  if(!items.length){notify("Adicione pelo menos uma série.");return;}
- const obj={id:vals.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""),name:vals.name,muscle:vals.muscle,rest:Math.round(num(vals.rest)||120),notes:vals.notes||"",sets:items};
+ if(vals.videoUrl&&!validVideoUrl(vals.videoUrl)){notify("Informe um endereço HTTPS direto de arquivo MP4 ou WebM.");return;}
+ const obj={id:vals.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""),name:vals.name,muscle:vals.muscle,rest:Math.round(num(vals.rest)||120),notes:vals.notes||"",videoUrl:vals.videoUrl||"",sets:items};
  const index=form.dataset.ex;if(index!=="")r.exercises[Number(index)]=obj;else r.exercises.push(obj);
  commit();routineEditor(r.id);notify("Exercício atualizado para os próximos treinos.");
 }
@@ -235,6 +299,7 @@ function handleAction(b){
  case "start":start(b.dataset.routine);return;
  case "resume":navigate("session");return;
  case "closeModal":closeModal();return;
+ case "watchDemo":watchDemo(b.dataset.demoName);return;
  case "routineDetail":{const r=findRoutine(b.dataset.routine);if(r)openModal(detailRoutine(r),true);return;}
  case "cloudLogin":showGate();return;
  case "cloudInvite":shareInvite();return;
@@ -278,7 +343,7 @@ document.addEventListener("change",e=>{
  if(t.id==="workspace-select"&&cloud?.signedIn){
    cloud.selectWorkspace(t.value).then(()=>{setCloudStatus("online","Espaço alterado.");navigate("dashboard");}).catch(err=>notify(err.message));return;
  }
- if(t.id==="profile-select"){current=t.value;localStorage.setItem("forma.currentProfile",current);ui.page="dashboard";ui.exerciseId="";render();return;}
+ if(t.id==="profile-select"){current=t.value;localStorage.setItem("forma.currentProfile",current);ui.exerciseId="";navigate("dashboard");return;}
  if(t.id==="exercise-select"){ui.exerciseId=t.value;render();return;}
  if(t.dataset.pref){store.preferences[t.dataset.pref]=t.checked;commit();return;}
  if(t.dataset.sessionField){editActiveSet(t);return;}
@@ -350,4 +415,8 @@ async function initializeCloud(){
 }
 initializeCloud();
 window.addEventListener("online",()=>{if(cloud?.signedIn)cloud.flush().catch(()=>{});});
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&cloud?.signedIn)cloud.pull().catch(()=>{});});
+document.addEventListener("visibilitychange",()=>{
+ if(!document.hidden&&cloud?.signedIn)cloud.pull().catch(()=>{});
+ for(const video of document.querySelectorAll("video[data-demo-src]"))if(document.hidden)video.pause();
+ else hydrateDemos();
+});
