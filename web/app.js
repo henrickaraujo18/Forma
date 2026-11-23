@@ -196,7 +196,7 @@ function handleAction(b){
  case "csvBody":download("forma-corpo-"+current+"-"+today()+".csv",csvMeasurements(store,current),"text/csv;charset=utf-8");notify("CSV de avaliações gerado.");return;
  }
 }
-document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b){if(b.tagName==="BUTTON"&&b.type==="submit")return;e.preventDefault();handleAction(b);}else if(e.target===$("modal-backdrop"))closeModal();});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b){e.preventDefault();handleAction(b);}else if(e.target===$("modal-backdrop"))closeModal();});
 document.addEventListener("change",e=>{
  const t=e.target;
  if(t.id==="profile-select"){current=t.value;localStorage.setItem("forma.currentProfile",current);ui.page="dashboard";ui.exerciseId="";render();return;}
