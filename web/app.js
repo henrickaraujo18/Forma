@@ -1,3 +1,4 @@
+import {FormaCloud,mergeStores} from "./cloud.js";
 import {STARTER_ROUTINES} from "./data.js";
 import {load,save,id,today,dateAt,dateAt as _dateAt,num,fmt,esc,niceDate,attr,sorted,download,csvSessions,csvMeasurements,validateImport,statsSession,completedSets} from "./core.js";
 import {NAV,navigation,mobileNav,view,bodyModal,cardioModal,detailRoutine,sessionDetail,editRoutineModal,exerciseModal,seriesEditRow,confirmModal} from "./ui.js";
@@ -6,13 +7,85 @@ let current="henrick";try{current=localStorage.getItem("forma.currentProfile")||
 if(!store.profiles.some(x=>x.id===current))current=store.profiles[0]?.id||"henrick";
 let ui={page:(store.activeSessions?.[current]||store.active?.profile===current)?"session":"dashboard",bodyMetric:"weight",exerciseMetric:"load",exerciseId:"",weekOffset:0};
 let pendingImport=null,deferredInstall=null,lastToast=0,toastTimer=0;
+let cloud=null,authMode="login",cloudMsg="",cloudStatusLabel="offline";
 const $=id=>document.getElementById(id);
 function profile(){return store.profiles.find(x=>x.id===current)||store.profiles[0]}\nfunction getActive(){return store.activeSessions?.[current]||(store.active?.profile===current?store.active:null)}
-function commit(){if(!save(store))notify("Armazenamento cheio ou indisponível. Faça um backup e libere espaço.");}
+function commit(){
+ if(!save(store))notify("Armazenamento cheio ou indisponível. Faça um backup e libere espaço.");
+ if(cloud?.signedIn&&cloud.workspace)cloud.queue(store);
+}
 function notify(message){const t=$("toast");t.textContent=message;t.classList.add("visible");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("visible"),3400);}
 function navigate(page){ui.page=page;render();window.scrollTo({top:0,behavior:"instant"});}
+
+function cloudInfo(){
+ return {connected:Boolean(cloud?.signedIn&&cloud.workspace),status:cloudStatusLabel,
+   message:cloudMsg,userEmail:cloud?.user?.email||"",role:cloud?.role||"",
+   workspace:cloud?.workspace||"",workspaces:cloud?.workspaces||[]};
+}
+function setCloudStatus(status,message=""){
+ cloudStatusLabel=status;cloudMsg=message;
+ const b=$("cloud-indicator");
+ if(b){b.dataset.status=status;b.textContent=status==="online"?"● Sincronizado":status==="pending"?"◌ Pendente":status==="syncing"?"◌ Sincronizando":status==="error"?"! Offline":"● Local";}
+ if(ui.page==="settings"&&cloud)render();
+}
+function showGate(message=""){
+ const gate=$("auth-gate");gate.hidden=false;
+ const msg=$("auth-message");msg.textContent=message;
+ $("auth-form").querySelector('[name="password"]').value="";
+}
+function hideGate(){$("auth-gate").hidden=true;}
+function setAuthMode(mode){
+ authMode=mode;
+ $("auth-tab-login").classList.toggle("active",mode==="login");
+ $("auth-tab-register").classList.toggle("active",mode==="register");
+ $("auth-submit").textContent=mode==="register"?"Criar conta gratuita":"Entrar e sincronizar";
+ $("auth-form").querySelector('[name="password"]').autocomplete=mode==="register"?"new-password":"current-password";
+ $("auth-message").textContent="";
+}
+async function authenticate(form){
+ const button=$("auth-submit"),d=Object.fromEntries(new FormData(form));
+ if(button.disabled)return;
+ button.disabled=true;button.textContent="Conectando...";
+ $("auth-message").textContent="";
+ try{
+  let result;
+  if(authMode==="register")result=await cloud.register(d.email.trim(),d.password);
+  else result={loggedIn:true,user:await cloud.login(d.email.trim(),d.password)};
+  if(result.loggedIn){
+   try{sessionStorage.removeItem("forma.cloud.offline");}catch{}
+   hideGate();setCloudStatus("online","Histórico sincronizado.");
+   navigate("dashboard");notify("Conta conectada. Os dados agora são sincronizados.");
+  }else{$("auth-message").textContent=result.message||"Verifique seu e-mail e entre com sua senha.";setAuthMode("login");$("auth-message").textContent=result.message||"Verifique seu e-mail antes de entrar.";}
+ }catch(err){
+  $("auth-message").textContent=err.message||"Não foi possível autenticar.";
+ }finally{button.disabled=false;button.textContent=authMode==="register"?"Criar conta gratuita":"Entrar e sincronizar";}
+}
+async function shareInvite(){
+ try{
+  const code=await cloud.invite();
+  openModal(`<h2>Convidar para o Forma</h2><p>Compartilhe este código apenas com a pessoa que terá acesso aos treinos e aos dados corporais dos dois perfis. O código expira em 7 dias e funciona uma única vez.</p>
+   <div class="cloud-code" id="invite-code">${esc(code)}</div><footer><button type="button" class="btn ghost" data-action="closeModal">Fechar</button><button type="button" class="btn primary" data-action="copyInvite">Copiar código</button></footer>`);
+ }catch(err){notify(err.message);}
+}
+async function joinInvite(code){
+ try{
+  await cloud.join(code);
+  closeModal();setCloudStatus("online","Espaço familiar conectado.");
+  navigate("dashboard");notify("Convite aceito. Vocês agora compartilham os treinos na nuvem.");
+ }catch(err){notify(err.message);}
+}
+async function cloudLogout(){
+ try{
+  await cloud.logout();
+  try{localStorage.removeItem("forma.fitness.v1");localStorage.removeItem("forma.currentProfile");sessionStorage.removeItem("forma.cloud.offline");}catch{}
+  store=load();current="henrick";ui.page="dashboard";
+  render();showGate("Você saiu da sua conta. Entre novamente para acessar os dados da nuvem.");
+ }catch(err){notify("Erro ao sair: "+err.message);}
+}
+
 function render(){
  const p=profile();if(!p)return;
+ ui.cloud=cloudInfo();
  document.documentElement.style.setProperty("--lime",p.accent||"#b0ef60");
  $("active-avatar").textContent=(p.name||"F").slice(0,1).toUpperCase();
  $("active-avatar").style.background=p.accent||"#b0ef60";
@@ -115,15 +188,15 @@ function storeBody(data,existingId=""){
   if(data[k]!==""&&data[k]!=null&&(num(data[k])==null||num(data[k])<0)){notify("Verifique o campo "+k);return false;}
  }
  if(data.fat!==""&&data.fat!=null&&num(data.fat)>100){notify("Percentual de gordura inválido.");return false;}
- if(existingId){const i=store.measurements.findIndex(x=>x.id===existingId&&x.profile===current);if(i>=0)store.measurements[i]={...store.measurements[i],...data};}
- else store.measurements.push({...data,id:id(),profile:current,createdAt:new Date().toISOString()});
+ if(existingId){const i=store.measurements.findIndex(x=>x.id===existingId&&x.profile===current);if(i>=0)store.measurements[i]={...store.measurements[i],...data,updatedAt:new Date().toISOString()};}
+ else store.measurements.push({...data,id:id(),profile:current,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
  commit();closeModal();render();notify("Avaliação corporal salva.");return true;
 }
 function storeCardio(data,existingId=""){
  if(!data.date||num(data.minutes)==null||num(data.minutes)<=0){notify("Informe data e duração válida.");return false;}
  if(data.rpe&&((num(data.rpe)||0)>10||(num(data.rpe)||0)<1)){notify("Esforço deve ser entre 1 e 10.");return false;}
- if(existingId){const i=store.cardio.findIndex(x=>x.id===existingId&&x.profile===current);if(i>=0)store.cardio[i]={...store.cardio[i],...data};}
- else store.cardio.push({...data,id:id(),profile:current,createdAt:new Date().toISOString()});
+ if(existingId){const i=store.cardio.findIndex(x=>x.id===existingId&&x.profile===current);if(i>=0)store.cardio[i]={...store.cardio[i],...data,updatedAt:new Date().toISOString()};}
+ else store.cardio.push({...data,id:id(),profile:current,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
  commit();closeModal();render();notify("Cardio registrado.");return true;
 }
 function submitExercise(form){
@@ -143,9 +216,9 @@ function confirmAction(action,button){
  const x=button?.dataset.id,rid=button?.dataset.routine,ex=button?.dataset.ex;
  switch(action){
  case "discard":discard();return;
- case "deleteSession":store.sessions=store.sessions.filter(s=>!(s.id===x&&s.profile===current));break;
- case "deleteBody":store.measurements=store.measurements.filter(s=>!(s.id===x&&s.profile===current));break;
- case "deleteCardio":store.cardio=store.cardio.filter(s=>!(s.id===x&&s.profile===current));break;
+ case "deleteSession":store.deleted=store.deleted||{sessions:[],measurements:[],cardio:[]};store.deleted.sessions.push(x);store.sessions=store.sessions.filter(s=>!(s.id===x&&s.profile===current));break;
+ case "deleteBody":store.deleted=store.deleted||{sessions:[],measurements:[],cardio:[]};store.deleted.measurements.push(x);store.measurements=store.measurements.filter(s=>!(s.id===x&&s.profile===current));break;
+ case "deleteCardio":store.deleted=store.deleted||{sessions:[],measurements:[],cardio:[]};store.deleted.cardio.push(x);store.cardio=store.cardio.filter(s=>!(s.id===x&&s.profile===current));break;
  case "deleteRoutine":store.routines[current]=store.routines[current].filter(r=>r.id!==rid);break;
  case "deleteExercise":{const r=findRoutine(rid);if(r)r.exercises.splice(Number(ex),1);break;}
  case "erase":localStorage.removeItem("forma.fitness.v1");store=load();current="henrick";localStorage.setItem("forma.currentProfile",current);navigate("dashboard");closeModal();notify("Os dados locais foram apagados.");return;
@@ -162,6 +235,12 @@ function handleAction(b){
  case "resume":navigate("session");return;
  case "closeModal":closeModal();return;
  case "routineDetail":{const r=findRoutine(b.dataset.routine);if(r)openModal(detailRoutine(r),true);return;}
+ case "cloudLogin":showGate();return;
+ case "cloudInvite":shareInvite();return;
+ case "cloudJoin":openModal(`<h2>Usar convite familiar</h2><p>Entre com o código recebido para acessar o espaço de treinos compartilhado.</p><form id="cloud-join-form"><label class="field">Código de convite<input type="text" name="code" required minlength="40" autocomplete="off" placeholder="Cole o código de 64 caracteres"></label><footer><button class="btn ghost" type="button" data-action="closeModal">Cancelar</button><button class="btn primary" type="submit">Participar do espaço</button></footer></form>`);return;
+ case "copyInvite":{const code=$("invite-code")?.textContent||"";navigator.clipboard?.writeText(code).then(()=>notify("Código copiado.")).catch(()=>notify("Selecione e copie o código exibido."));return;}
+ case "cloudSync":if(cloud?.signedIn){cloud.flush().then(()=>cloud.pull()).then(()=>notify("Sincronização verificada.")).catch(err=>notify(err.message));}else showGate();return;
+ case "cloudLogout":cloudLogout();return;
  case "discardSession":openModal(confirmModal("Descartar sessão?","Todas as séries deste treino em andamento serão perdidas. Sessões anteriores não são afetadas.","discard"));return;
  case "finishSession":finishModal();return;
  case "cardioModal":openModal(cardioModal());return;
@@ -195,6 +274,9 @@ function handleAction(b){
 document.addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b){e.preventDefault();handleAction(b);}else if(e.target===$("modal-backdrop"))closeModal();});
 document.addEventListener("change",e=>{
  const t=e.target;
+ if(t.id==="workspace-select"&&cloud?.signedIn){
+   cloud.selectWorkspace(t.value).then(()=>{setCloudStatus("online","Espaço alterado.");navigate("dashboard");}).catch(err=>notify(err.message));return;
+ }
  if(t.id==="profile-select"){current=t.value;localStorage.setItem("forma.currentProfile",current);ui.page="dashboard";ui.exerciseId="";render();return;}
  if(t.id==="exercise-select"){ui.exerciseId=t.value;render();return;}
  if(t.dataset.pref){store.preferences[t.dataset.pref]=t.checked;commit();return;}
@@ -211,6 +293,8 @@ document.addEventListener("submit",e=>{
  if(!form.id)return;
  e.preventDefault();const data=formValues(form);
  switch(form.id){
+ case "auth-form":authenticate(form);return;
+ case "cloud-join-form":joinInvite(data.code);return;
  case "profile-form":{const p=profile();if(!data.name){notify("Informe seu nome.");return;}if(data.height&&(!num(data.height)||num(data.height)>260||num(data.height)<80)){notify("Altura inválida. Informe em centímetros.");return;}p.name=data.name;p.height=data.height;p.goal=data.goal;commit();render();notify("Perfil atualizado.");return;}
  case "body-form":storeBody(data);form.reset();return;
  case "edit-body-form":storeBody(data,form.dataset.id);return;
@@ -235,3 +319,34 @@ if("serviceWorker" in navigator&&location.protocol==="https:"){
   .catch(e=>console.warn("Offline indisponível",e));
 }
 render();
+
+$("auth-gate").addEventListener("click",e=>{
+ const tab=e.target.closest("[data-auth-tab]");
+ if(tab){setAuthMode(tab.dataset.authTab);return;}
+ if(e.target.closest("#offline-button")){
+  try{sessionStorage.setItem("forma.cloud.offline","1")}catch{}
+  hideGate();setCloudStatus("offline","Uso local neste aparelho.");render();notify("Modo local ativado. Para sincronizar, entre em Configurações.");
+ }
+});
+cloud=new FormaCloud({
+ onData:data=>{
+  store=mergeStores({},data);
+  save(store);
+  if(!store.profiles.some(p=>p.id===current))current=store.profiles[0]?.id||"henrick";
+  render();
+ },
+ onStatus:setCloudStatus,
+ getInitialData:()=>store
+});
+async function initializeCloud(){
+ let offline=false;try{offline=sessionStorage.getItem("forma.cloud.offline")==="1"}catch{}
+ if(offline){hideGate();setCloudStatus("offline","Uso local neste aparelho.");return;}
+ showGate("Conectando...");
+ try{
+  if(await cloud.restore()){hideGate();setCloudStatus("online","Histórico sincronizado.");}
+  else showGate("Entre com sua conta ou continue neste aparelho.");
+ }catch(e){showGate("Servidor indisponível. É possível continuar no modo local.");setCloudStatus("error",e.message);}
+}
+initializeCloud();
+window.addEventListener("online",()=>{if(cloud?.signedIn)cloud.flush().catch(()=>{});});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&cloud?.signedIn)cloud.pull().catch(()=>{});});
