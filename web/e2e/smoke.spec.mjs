@@ -2,6 +2,8 @@ import {test,expect} from "@playwright/test";
 test.beforeEach(async({page})=>{
   page.on("pageerror",error=>{throw error;});
   await page.goto("/",{waitUntil:"networkidle"});
+  const gate=page.locator("#auth-gate");
+  if(await gate.isVisible())await page.locator("#offline-button").click();
 });
 test("carrega painel e as duas fichas",async({page})=>{
  await expect(page.locator("h1")).toContainText("Henrick");
