@@ -1,6 +1,6 @@
 /* Forma Fitness PWA — rede primeiro: atualizações substituem arquivos antigos, cache só como fallback offline. */
-const CACHE="forma-fitness-v3-20261123";
-const ASSETS=["./","./index.html","./styles.css","./data.js","./core.js","./ui.js","./app.js","./cloud.js","./cloud-config.js","./manifest.webmanifest","./favicon.svg"];
+const CACHE="forma-fitness-v4-motion-20261123";
+const ASSETS=["./","./index.html","./styles.css","./data.js","./core.js","./ui.js","./app.js","./cloud.js","./cloud-config.js","./media.js","./manifest.webmanifest","./favicon.svg"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });
