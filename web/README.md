@@ -1,7 +1,7 @@
 # Forma Fitness · Sistema web / PWA
 
 Aplicação para os treinos de **Henrick** e **Cecília**, baseada nas fichas recebidas de 30/03/2026.
-A pasta `web/` é independente do código Swift do aplicativo iOS, localizado na raiz do repositório.
+O Forma é exclusivamente Web/PWA. O código iOS legado foi excluído da árvore atual do repositório.
 
 ## Estado atual (v2)
 - Nove rotinas iniciais, incluindo séries de aquecimento, feeder, trabalho e top, com exercícios, repetições e descanso transcritos dos PDFs.
@@ -14,6 +14,14 @@ A pasta `web/` é independente do código Swift do aplicativo iOS, localizado na
 - Login com e-mail e senha por Supabase Auth e sincronização entre dispositivos.
 - Espaço compartilhável por convite único (64 caracteres, validade 7 dias); duas contas podem usar os mesmos dois perfis com permissões de membro.
 - Sincronização com versão de estado (CAS), união de registros por ID e trilha de exclusões para evitar reaparecimento de itens deletados.
+
+## Mídias e experiências de movimento
+- Biblioteca integrada: **44 exercícios distintos**, com **12 vídeos MP4 CC0 (5,5–8s)** e **32 animações CC0 com ciclo de 8s**. A função de cada exercício é exibida na sessão e ampliada ao tocar em “Ampliar”.
+- Fontes livres: [Workout Free Videos](https://github.com/namnq/workout-free-videos) e [Open Exercise Illustrations](https://github.com/MarvinNazari/exercise-images).
+- Variações aproximadas são identificadas e explicadas para evitar confusão entre equipamentos.
+- Mídia é carregada sob demanda, e o site respeita `prefers-reduced-motion`.
+- Gráficos (linhas e barras), cartões e páginas têm animações, com transições nativas nos navegadores compatíveis.
+- O editor de exercícios aceita URL HTTPS direta para MP4/WebM, sobrepondo a demonstração da biblioteca.
 
 ## Implantação e arquitetura
 - O front-end é estático e hospedado na Vercel.
@@ -37,7 +45,7 @@ A pasta `web/` é independente do código Swift do aplicativo iOS, localizado na
 - O login da infraestrutura Supabase é compartilhado com a instalação ContaFlux, mas permissões de leitura dos dados do Forma são distintas por RLS. A separação é lógica, não física.
 - O modo offline não é um banco criptografado; limpe a sessão em aparelhos de terceiros.
 - A primeira autenticação real com contas finais precisa ser feita pelos titulares, por motivos óbvios de privacidade.
-- A integração Apple Health/HealthKit e Bluetooth da balança OKOK requer aplicativo nativo e não é fornecida pela PWA.
+- O escopo do Forma é somente Web/PWA; integrações com Apple Saúde, OKOK e aplicativos nativos não fazem parte do projeto.
 - IMC, 1RM e estimativa de massa magra não substituem avaliação de profissional.
 
 ## Desenvolvimento e testes
