@@ -1,8 +1,8 @@
 {
-  "id": "/web/",
+  "id": "/",
   "name": "Forma Fitness · Treino & Evolução",
   "short_name": "Forma",
-  "description": "Treinos de Henrick e Cecília, evolução corporal e análises.",
+  "description": "Treinos de Henrick e Cecília, evolução corporal, gráficos cinematográficos e demonstrações de exercícios.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
