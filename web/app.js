@@ -229,5 +229,13 @@ $("timer-dismiss").addEventListener("click",stopTimer);
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstall=e;$("install-button").hidden=false;});
 $("install-button").addEventListener("click",async()=>{if(!deferredInstall)return;deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null;$("install-button").hidden=true;});
 window.addEventListener("appinstalled",()=>notify("Forma instalado neste dispositivo."));
-if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("./sw.js").catch(e=>console.warn("Offline indisponível",e));
+if("serviceWorker" in navigator&&location.protocol==="https:"){
+ let reloading=false;
+ navigator.serviceWorker.addEventListener("controllerchange",()=>{
+   if(!reloading){reloading=true;location.reload();}
+ });
+ navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"})
+  .then(reg=>reg.update().catch(()=>{}))
+  .catch(e=>console.warn("Offline indisponível",e));
+}
 render();
