@@ -2,9 +2,9 @@ import {STARTER_ROUTINES} from "./data.js";
 import {load,save,id,today,dateAt,dateAt as _dateAt,num,fmt,esc,niceDate,attr,sorted,download,csvSessions,csvMeasurements,validateImport,statsSession,completedSets} from "./core.js";
 import {NAV,navigation,mobileNav,view,bodyModal,cardioModal,detailRoutine,sessionDetail,editRoutineModal,exerciseModal,seriesEditRow,confirmModal} from "./ui.js";
 let store=load();
-let current=localStorage.getItem("forma.currentProfile")||"henrick";
+let current="henrick";try{current=localStorage.getItem("forma.currentProfile")||"henrick";}catch{}
 if(!store.profiles.some(x=>x.id===current))current=store.profiles[0]?.id||"henrick";
-let ui={page:"dashboard",bodyMetric:"weight",exerciseMetric:"load",exerciseId:"",weekOffset:0};
+let ui={page:store.active&&store.active.profile===current?"session":"dashboard",bodyMetric:"weight",exerciseMetric:"load",exerciseId:"",weekOffset:0};
 let pendingImport=null,deferredInstall=null,lastToast=0,toastTimer=0;
 const $=id=>document.getElementById(id);
 function profile(){return store.profiles.find(x=>x.id===current)||store.profiles[0]}
