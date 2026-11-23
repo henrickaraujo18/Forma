@@ -15,3 +15,126 @@
 .cloud-indicator[data-status="online"]{color:var(--lime)}.cloud-indicator[data-status="pending"]{color:var(--gold)}.cloud-indicator[data-status="error"]{color:var(--bad)}
 .cloud-panel{margin-bottom:17px}.cloud-actions{display:flex;gap:8px;flex-wrap:wrap}.cloud-code{width:100%;border:1px solid #5c795f;background:#0d1810;border-radius:11px;padding:15px;display:block;color:var(--lime);font-size:12px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;word-break:break-all}
 @media(max-width:760px){.cloud-indicator{font-size:10px;margin-right:7px}.auth-shell{margin-top:auto;margin-bottom:auto}}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   FORMA MOTION 2.0 — filmic rhythm, subtle depth, kinetic metrics
+   Motion remains optional for accessibility and low power devices.
+   ═══════════════════════════════════════════════════════════════ */
+:root{--forma-ease:cubic-bezier(.18,.78,.21,1);--forma-ease-exit:cubic-bezier(.55,.05,.72,.35)}
+body{background:radial-gradient(ellipse 76% 66% at 97% 0%,#213529 0%,transparent 55%),#0e1812}
+.workspace{position:relative;isolation:isolate}
+.workspace::before{
+ content:"";pointer-events:none;position:fixed;top:66px;right:-22vw;width:65vw;height:54vh;
+ background:radial-gradient(ellipse at center,#aee9600d 0%,#6eb2b307 39%,transparent 68%);
+ filter:blur(28px);z-index:-1;
+}
+.card{transition:border-color .3s ease,box-shadow .35s ease,transform .45s var(--forma-ease);backface-visibility:hidden}
+.routine-card:hover,.chart-card:hover{transform:translateY(-3px);border-color:#587352;box-shadow:0 24px 52px #050b0877,0 0 26px #a7ed6020}
+.btn{position:relative;overflow:hidden;isolation:isolate;transition:transform .25s var(--forma-ease),filter .2s ease,background .2s ease,box-shadow .2s ease}
+.btn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08)}
+.btn:active:not(:disabled){transform:scale(.965)}
+.btn.primary:hover:not(:disabled){box-shadow:0 9px 27px #b0ef6030}
+.btn:focus-visible,.nav-btn:focus-visible,.demo-expand:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+.nav-btn{position:relative;transition:transform .3s var(--forma-ease),background .3s ease,color .25s ease}
+.nav-btn:hover{transform:translateX(4px)}
+.nav-btn.active::before{content:"";position:absolute;width:3px;height:60%;background:var(--lime);left:0;top:20%;border-radius:4px;box-shadow:0 0 15px #b0ef60b2}
+.kpi{position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(108deg,transparent 18%,#d3ffcc0c 48%,transparent 76%);transform:translateX(-150%);animation:formaSheen 5s 1.35s ease-in-out both}
+.kpi .value{animation:formaNumberEnter .85s var(--forma-ease) both;transform-origin:bottom left}
+.kpi:nth-child(2) .value{animation-delay:.07s}
+.kpi:nth-child(3) .value{animation-delay:.13s}
+.kpi:nth-child(4) .value{animation-delay:.18s}
+.view.page-enter{animation:formaPageArrival .7s var(--forma-ease) both}
+.view.page-enter .header-row{animation:formaHeaderArrival .65s var(--forma-ease) both}
+.view.page-enter .grid>.card,.view.page-enter .kpis>.card,.view.page-enter .routine-grid>.card,
+.view.page-enter>.card,.view.page-enter>.grid,.view.page-enter .chart-card{
+ animation:formaCardArrival .67s var(--forma-ease) both
+}
+.view.page-enter .grid>.card:nth-child(2),.view.page-enter .kpis>.card:nth-child(2),.view.page-enter .routine-grid>.card:nth-child(2){animation-delay:65ms}
+.view.page-enter .grid>.card:nth-child(3),.view.page-enter .kpis>.card:nth-child(3),.view.page-enter .routine-grid>.card:nth-child(3){animation-delay:120ms}
+.view.page-enter .grid>.card:nth-child(4),.view.page-enter .kpis>.card:nth-child(4),.view.page-enter .routine-grid>.card:nth-child(4){animation-delay:180ms}
+.chart-area svg{overflow:visible}
+.chart-grid{animation:formaGridReveal .6s .05s both}
+.chart-trace{stroke-dasharray:1;stroke-dashoffset:1;animation:formaDrawStroke 1.4s .15s var(--forma-ease) forwards}
+.chart-dot{opacity:0;transform-box:fill-box;transform-origin:center;animation:formaDotPop .4s calc(.55s + var(--dot-index,0)*65ms) var(--forma-ease) forwards}
+.chart-bar{transform-box:fill-box;transform-origin:50% 100%;animation:formaBarRise .9s calc(.06s + var(--bar-index,0)*75ms) var(--forma-ease) both}
+.bars-list .bar-fill{transform:scaleX(0);transform-origin:left;animation:formaFill 1.05s .2s var(--forma-ease) forwards}
+.workout-progress div{transition:width .8s var(--forma-ease);box-shadow:0 0 15px #b0ef6040}
+.progress-ring{transition:background 1.2s var(--forma-ease);box-shadow:0 0 18px #b0ef6020}
+.modal-backdrop:not([hidden]){animation:formaBackdrop .3s ease both}
+.modal-backdrop:not([hidden]) .modal{animation:formaModal .55s var(--forma-ease) both;transform-origin:50% 60%}
+.auth-shell{animation:formaModal .85s var(--forma-ease) both}
+.toast.visible{animation:formaToast .35s var(--forma-ease) both}
+@supports (view-transition-name:root){
+ ::view-transition-old(root){animation:formaOldView .23s var(--forma-ease-exit) both}
+ ::view-transition-new(root){animation:formaNewView .52s var(--forma-ease) both}
+}
+@keyframes formaPageArrival{from{opacity:.55;filter:blur(4px);transform:translateY(13px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
+@keyframes formaHeaderArrival{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes formaCardArrival{from{opacity:0;transform:translateY(20px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes formaNumberEnter{from{opacity:0;transform:translateY(14px) scale(.88);filter:blur(5px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes formaSheen{0%,65%{transform:translateX(-150%)}100%{transform:translateX(150%)}}
+@keyframes formaGridReveal{from{opacity:0}to{opacity:1}}
+@keyframes formaDrawStroke{to{stroke-dashoffset:0}}
+@keyframes formaDotPop{0%{transform:scale(0);opacity:0}68%{transform:scale(1.42);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes formaBarRise{from{transform:scaleY(.001);opacity:.45}to{transform:scaleY(1);opacity:1}}
+@keyframes formaFill{to{transform:scaleX(1)}}
+@keyframes formaBackdrop{from{opacity:0}to{opacity:1}}
+@keyframes formaModal{from{opacity:0;transform:translateY(24px) scale(.965);filter:blur(8px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes formaToast{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes formaOldView{to{opacity:0;filter:blur(8px);transform:scale(.985)}}
+@keyframes formaNewView{from{opacity:0;filter:blur(9px);transform:scale(1.013)}to{opacity:1;filter:blur(0);transform:scale(1)}}
+
+/* Formato padronizado de clipes curtos e animações (8 segundos) */
+.exercise-demo{
+ --demo-height:176px;
+ display:block;margin:12px 0 16px;padding:0;
+ overflow:hidden;background:#0d1511;border:1px solid #334937;border-radius:15px;
+ box-shadow:0 12px 28px #02060250;position:relative
+}
+.demo-screen{position:relative;height:var(--demo-height);background:radial-gradient(ellipse at 50% 42%,#2b4036,#101b17 62%,#080f0d);overflow:hidden}
+.demo-screen video,.demo-animation{width:100%;height:100%;display:block;object-fit:contain}
+.demo-screen video{background:#131a17}
+.demo-animation{position:relative;overflow:hidden}
+.demo-animation::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,#a9c3c610,transparent 66%);pointer-events:none;z-index:2}
+.demo-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;filter:contrast(1.045) saturate(.94)}
+.demo-first{animation:formaMotionStart 8s ease-in-out infinite}
+.demo-last{animation:formaMotionEnd 8s ease-in-out infinite}
+.demo-vignette{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,#06100d38,transparent 25%,transparent 60%,#04130c83)}
+.demo-counter{position:absolute;top:10px;left:10px;background:#04110cc9;color:#caff91;border:1px solid #b0ef6045;
+ border-radius:7px;padding:6px 9px;font:800 10px/1.2 ui-monospace,SFMono-Regular,monospace;letter-spacing:.7px;backdrop-filter:blur(8px)}
+.demo-expand{position:absolute;bottom:10px;right:10px;border:1px solid #b4d0bd66;color:#f2ffec;
+ background:#0b1d17cc;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:800;transition:background .24s ease,transform .24s ease;cursor:pointer}
+.demo-expand:hover{background:#2a4936;transform:scale(1.035)}
+.demo-caption{display:flex;align-items:center;gap:8px;min-height:37px;padding:9px 12px;color:#adbcad;font-size:11px;line-height:1.4}
+.demo-caption>span:nth-child(2){flex:1}
+.demo-live-dot{flex:none;width:6px;height:6px;border-radius:50%;background:#b0ef60;box-shadow:0 0 10px #b0ef60aa;animation:formaLive 2.7s ease-in-out infinite}
+.demo-validity{margin-left:auto;flex:none;font-weight:850;font-size:9px;letter-spacing:.5px;color:#a9f278}
+.demo-validity.approx{color:#e6c88e}
+.demo-large{--demo-height:min(52dvh,430px);margin-top:20px}
+.demo-large .demo-caption{padding:13px;font-size:12px}
+.demo-unavailable{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:150px;gap:7px;color:#9dac9f;border:1px dashed #4d6150;border-radius:12px;padding:12px}
+.demo-unavailable strong{color:#e7eada}
+.demo-unavailable span{font-size:28px;color:#b0ef60}
+.demo-unavailable small{font-size:11px}
+.demo-list-play{white-space:nowrap}
+.demo-footnote{font-size:11px;color:#899d8b;margin:13px 0;line-height:1.5}
+@keyframes formaMotionStart{0%,34%,100%{opacity:1;transform:scale(1)}49%,84%{opacity:0;transform:scale(1.017)}}
+@keyframes formaMotionEnd{0%,34%,100%{opacity:0;transform:scale(1.017)}49%,84%{opacity:1;transform:scale(1)}}
+@keyframes formaLive{50%{opacity:.5;box-shadow:0 0 4px #b0ef6060}}
+@media(min-width:1100px){.workout-layout .exercise-demo{--demo-height:192px}.workout-layout .exercise-card{padding:22px}}
+@media(max-width:760px){
+ .exercise-demo{--demo-height:165px}
+ .demo-large{--demo-height:min(43dvh,340px)}
+ .demo-caption{font-size:10px}
+ .routine-card:hover,.chart-card:hover{transform:none}
+ .view.page-enter .grid>.card,.view.page-enter .kpis>.card{animation-duration:.48s}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+ .chart-trace{stroke-dashoffset:0}.chart-dot{opacity:1;transform:none}.chart-bar{transform:none}
+ .bars-list .bar-fill{transform:none}
+ .demo-first{opacity:1}.demo-last{opacity:0}
+ ::view-transition-old(root),::view-transition-new(root){animation:none!important}
+}
