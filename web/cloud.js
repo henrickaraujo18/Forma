@@ -118,8 +118,14 @@ export class FormaCloud{
   }
   return {loggedIn:false,message:"Cadastro recebido. Se a confirmação de e-mail estiver ativada, confirme sua conta e depois entre pelo Forma."};
  }
+ async settlePending(){
+  for(let attempt=0;this.writing&&attempt<80;attempt++)await new Promise(resolve=>setTimeout(resolve,100));
+  if(this.writing)throw new Error("Sincronização ainda em andamento. Tente novamente.");
+  if(this.pending)await this.flush();
+  if(this.pending)throw new Error("Há alterações que ainda não chegaram à nuvem. Conecte-se antes de trocar de conta ou de espaço.");
+ }
  async logout(){
-  try{await this.flush();}catch{}
+  await this.settlePending();
   if(this.session?.access_token)await send("/auth/v1/logout",{method:"POST",token:this.session.access_token}).catch(()=>{});
   if(this.workspace)try{localStorage.removeItem(cacheKey(this.workspace));}catch{}
   try{localStorage.removeItem(SESSION_KEY);localStorage.removeItem(LAST_WORKSPACE);}catch{}
@@ -152,7 +158,7 @@ export class FormaCloud{
  }
  async selectWorkspace(workspace){
   if(!this.workspaces.some(x=>x.workspace_id===workspace))throw new Error("Você não tem acesso a este espaço.");
-  if(this.pending&&this.workspace&&this.workspace!==workspace)await this.flush();
+  if(this.workspace&&this.workspace!==workspace)await this.settlePending();
   this.workspace=workspace;this.role=this.workspaces.find(x=>x.workspace_id===workspace)?.role||"member";
   try{localStorage.setItem(LAST_WORKSPACE,workspace)}catch{}
   const record=await this.fetchState();
