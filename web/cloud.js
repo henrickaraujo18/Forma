@@ -107,13 +107,13 @@ export class FormaCloud{
   const response=await send("/auth/v1/token?grant_type=password",{method:"POST",body:{email,password}});
   this.setSession(response);
   this.user=response.user||await this.authorized("/auth/v1/user");
-  await this.open();
+  await this.open(null,this.getInitialData());
   return this.user;
  }
  async register(email,password){
   const result=await send("/auth/v1/signup",{method:"POST",body:{email,password}});
   if(result?.access_token&&result?.refresh_token){
-    this.setSession(result);this.user=result.user||await this.authorized("/auth/v1/user");await this.open();
+    this.setSession(result);this.user=result.user||await this.authorized("/auth/v1/user");await this.open(null,this.getInitialData());
     return {loggedIn:true};
   }
   return {loggedIn:false,message:"Cadastro recebido. Se a confirmação de e-mail estiver ativada, confirme sua conta e depois entre pelo Forma."};
