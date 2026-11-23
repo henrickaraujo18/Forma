@@ -4,10 +4,10 @@ import {NAV,navigation,mobileNav,view,bodyModal,cardioModal,detailRoutine,sessio
 let store=load();
 let current="henrick";try{current=localStorage.getItem("forma.currentProfile")||"henrick";}catch{}
 if(!store.profiles.some(x=>x.id===current))current=store.profiles[0]?.id||"henrick";
-let ui={page:store.active&&store.active.profile===current?"session":"dashboard",bodyMetric:"weight",exerciseMetric:"load",exerciseId:"",weekOffset:0};
+let ui={page:(store.activeSessions?.[current]||store.active?.profile===current)?"session":"dashboard",bodyMetric:"weight",exerciseMetric:"load",exerciseId:"",weekOffset:0};
 let pendingImport=null,deferredInstall=null,lastToast=0,toastTimer=0;
 const $=id=>document.getElementById(id);
-function profile(){return store.profiles.find(x=>x.id===current)||store.profiles[0]}
+function profile(){return store.profiles.find(x=>x.id===current)||store.profiles[0]}\nfunction getActive(){return store.activeSessions?.[current]||(store.active?.profile===current?store.active:null)}
 function commit(){if(!save(store))notify("Armazenamento cheio ou indisponível. Faça um backup e libere espaço.");}
 function notify(message){const t=$("toast");t.textContent=message;t.classList.add("visible");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("visible"),3400);}
 function navigate(page){ui.page=page;render();window.scrollTo({top:0,behavior:"instant"});}
@@ -49,14 +49,14 @@ function start(rid){
    return {...set,weight:prior?.done?String(prior.weight??""):"",reps:"",rpe:"",done:false};
   })
  }));
- store.active={id:id(),profile:current,routineId:r.id,routineName:r.name,startedAt:new Date().toISOString(),date:today(),exercises,notes:"",restUntil:null};
+ store.activeSessions[current]={id:id(),profile:current,routineId:r.id,routineName:r.name,startedAt:new Date().toISOString(),date:today(),exercises,notes:"",restUntil:null};
  commit();closeModal();navigate("session");notify("Treino iniciado. As cargas anteriores foram sugeridas quando disponíveis.");
 }
 function discard(){
- store.active=null;commit();closeModal();navigate("train");notify("Sessão descartada.");
+ delete store.activeSessions[current];commit();closeModal();navigate("train");notify("Sessão descartada.");
 }
 function finishModal(){
- const s=store.active;if(!s)return;
+ const s=getActive();if(!s)return;
  const n=completedSets(s).length;if(!n){notify("Conclua pelo menos uma série antes de salvar.");return;}
  openModal(`<h2>Finalizar ${esc(s.routineName)}</h2><p>${n} séries foram concluídas. Uma sessão parcial também pode ser salva.</p>
  <form id="finish-form"><div class="form-grid"><label class="field">Esforço da sessão (1-10)<input type="number" name="sessionRpe" min="1" max="10" step="1" placeholder="Opcional"></label><label class="field">Data do treino<input type="date" name="date" value="${attr(s.date)}" required></label></div>
@@ -64,17 +64,17 @@ function finishModal(){
  <footer><button class="btn ghost" data-action="closeModal" type="button">Cancelar</button><button type="submit" class="btn primary">✓ Salvar treino</button></footer></form>`);
 }
 function finish(form){
- const s=store.active;if(!s)return;const data=Object.fromEntries(new FormData(form));
+ const s=getActive();if(!s)return;const data=Object.fromEntries(new FormData(form));
  s.finishedAt=new Date().toISOString();s.date=data.date||today();s.sessionRpe=data.sessionRpe||"";s.notes=data.notes||"";
- delete s.restUntil;store.sessions.push(s);store.active=null;commit();closeModal();navigate("dashboard");notify("Treino salvo com sucesso. Seu histórico foi atualizado.");
+ delete s.restUntil;store.sessions.push(s);delete store.activeSessions[current];commit();closeModal();navigate("dashboard");notify("Treino salvo com sucesso. Seu histórico foi atualizado.");
 }
 function startTimer(seconds){
- if(!store.active||!store.preferences.autoTimer||seconds<=0)return;
- store.active.restUntil=Date.now()+seconds*1000;commit();tickTimer();
+ if(!getActive()||!store.preferences.autoTimer||seconds<=0)return;
+ getActive().restUntil=Date.now()+seconds*1000;commit();tickTimer();
 }
-function stopTimer(){if(store.active){store.active.restUntil=null;commit();}tickTimer();}
+function stopTimer(){if(store.active){getActive().restUntil=null;commit();}tickTimer();}
 function tickTimer(){
- const s=store.active,until=s?.restUntil;
+ const s=getActive(),until=s?.restUntil;
  if(!until){$("timer-banner").hidden=true;return;}
  const seconds=Math.max(0,Math.ceil((until-Date.now())/1000));
  if(!seconds){$("timer-banner").hidden=true;s.restUntil=null;commit();return;}
@@ -83,7 +83,7 @@ function tickTimer(){
 }
 setInterval(tickTimer,1000);
 function editActiveSet(target,isDone=false){
- const s=store.active;if(!s||s.profile!==current)return;
+ const s=getActive();if(!s||s.profile!==current)return;
  const exIndex=Number(target.dataset.ex),setIndex=Number(target.dataset.set),ex=s.exercises[exIndex],z=ex?.sets?.[setIndex];if(!z)return;
  if(isDone){
   const next=target.checked;
@@ -171,7 +171,7 @@ function handleAction(b){
  case "cardioModal":openModal(cardioModal());return;
  case "editCardio":{const x=store.cardio.find(z=>z.id===b.dataset.id&&z.profile===current);if(x)openModal(cardioModal(x));return;}
  case "editBody":{const x=store.measurements.find(z=>z.id===b.dataset.id&&z.profile===current);if(x)openModal(bodyModal(x));return;}
- case "addSet":{const e=store.active?.exercises?.[Number(b.dataset.ex)];if(e){const z=e.sets.at(-1)||{type:"Trabalho",target:"8-12"};e.sets.push({...z,reps:"",rpe:"",done:false});commit();render();}return;}
+ case "addSet":{const e=getActive()?.exercises?.[Number(b.dataset.ex)];if(e){const z=e.sets.at(-1)||{type:"Trabalho",target:"8-12"};e.sets.push({...z,reps:"",rpe:"",done:false});commit();render();}return;}
  case "bodyMetric":ui.bodyMetric=b.dataset.metric;render();return;
  case "exerciseMetric":ui.exerciseMetric=b.dataset.metric;render();return;
  case "weekPrev":ui.weekOffset--;render();return;
@@ -208,7 +208,7 @@ document.addEventListener("change",e=>{
 });
 document.addEventListener("input",e=>{
  const t=e.target;
- if(t.dataset.sessionNote&&store.active){store.active.notes=t.value;commit();}
+ if(t.dataset.sessionNote&&getActive()){getActive().notes=t.value;commit();}
 });
 document.addEventListener("submit",e=>{
  const form=e.target;
