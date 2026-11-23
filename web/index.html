@@ -22,7 +22,7 @@
   <div class="workspace">
     <header class="topbar">
       <div class="top-left"><div class="crumb">FORMA <span>/</span> <span id="page-name">Visão geral</span></div><div class="top-date" id="today"></div></div>
-      <div class="top-actions"><div class="profile-switch">
+      <div class="top-actions"><span class="cloud-indicator" id="cloud-indicator">● Local</span><div class="profile-switch">
         <span class="avatar" id="active-avatar">H</span>
         <select id="profile-select" aria-label="Selecionar atleta"></select><span class="select-chevron">⌄</span>
       </div></div>
@@ -31,8 +31,25 @@
     <nav id="mobile-nav" class="mobile-nav" aria-label="Navegação móvel"></nav>
   </div>
 </div>
+<section id="auth-gate" class="auth-gate" hidden aria-label="Acesso ao Forma Fitness">
+  <div class="auth-shell">
+    <div class="auth-brand"><span class="brand-mark">F</span><span class="brand-word">forma<span class="brand-sub">FITNESS</span></span></div>
+    <div class="eyebrow">SEU TREINO. SUA EVOLUÇÃO.</div>
+    <h1>Bem-vindo ao Forma</h1>
+    <p class="subtle">Acompanhe a evolução com dados protegidos, treinos personalizados e sincronização entre dispositivos.</p>
+    <div class="auth-switch"><button id="auth-tab-login" class="tab active" type="button" data-auth-tab="login">Entrar</button><button id="auth-tab-register" class="tab" type="button" data-auth-tab="register">Criar conta</button></div>
+    <form id="auth-form">
+      <label class="field">Seu e-mail<input name="email" type="email" required autocomplete="username" placeholder="voce@exemplo.com"></label>
+      <label class="field" style="margin-top:15px">Senha<input name="password" type="password" minlength="8" required autocomplete="current-password" placeholder="Mínimo de 8 caracteres"></label>
+      <div id="auth-message" class="auth-message" role="status" aria-live="polite"></div>
+      <button type="submit" class="btn primary" id="auth-submit" style="width:100%;margin-top:19px">Entrar e sincronizar</button>
+    </form>
+    <button class="btn ghost" id="offline-button" type="button" style="width:100%;margin-top:12px">Continuar neste aparelho sem conta</button>
+    <p class="auth-foot">Para compartilhar os treinos entre celulares, use uma conta e um convite familiar. No modo offline, os registros ficam somente neste aparelho.</p>
+  </div>
+</section>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="modal-backdrop" id="modal-backdrop" hidden><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
 <div class="timer-banner" id="timer-banner" hidden><span>⏱ Descanso</span><strong id="timer-label">00:00</strong><button id="timer-dismiss" type="button">Encerrar</button></div>
-<script type="module" src="app.js"></script>
+<noscript><p style="padding:20px">O Forma Fitness precisa de JavaScript habilitado para registrar treinos.</p></noscript>\n<script type="module" src="app.js"></script>
 </body></html>
