@@ -10,7 +10,7 @@ export const niceDate=(s,opts={day:"2-digit",month:"short"})=>dateAt(s).toLocale
 export const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 export const attr=v=>esc(v);
 export const cssSafe=v=>String(v||"").replace(/[^#a-z0-9]/gi,"");
-const initial=()=>({version:1,profiles:clone(STARTER_PROFILES),routines:clone(STARTER_ROUTINES),sessions:[],measurements:[],cardio:[],active:null,preferences:{autoTimer:true,excludeWarmupFromVolume:true}});
+const initial=()=>({version:1,profiles:clone(STARTER_PROFILES),routines:clone(STARTER_ROUTINES),sessions:[],measurements:[],cardio:[],active:null,activeSessions:{},deleted:{sessions:[],measurements:[],cardio:[]},preferences:{autoTimer:true,excludeWarmupFromVolume:true}});
 export function load(){
   try{
     const raw=localStorage.getItem(KEY);
@@ -21,6 +21,8 @@ export function load(){
     return {...base,...val,profiles:val.profiles.length?val.profiles:base.profiles,
       routines:{...base.routines,...(val.routines||{})},
       sessions:val.sessions||[],measurements:val.measurements||[],cardio:val.cardio||[],
+      activeSessions:{...(val.activeSessions||{}),...(val.active?.profile?{[val.active.profile]:val.active}:{})},active:null,
+      deleted:{...base.deleted,...(val.deleted||{})},
       preferences:{...base.preferences,...(val.preferences||{})}};
   }catch(e){console.warn("Forma: backup local inválido",e);return initial();}
 }
