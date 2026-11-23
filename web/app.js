@@ -9,7 +9,8 @@ let ui={page:(store.activeSessions?.[current]||store.active?.profile===current)?
 let pendingImport=null,deferredInstall=null,lastToast=0,toastTimer=0;
 let cloud=null,authMode="login",cloudMsg="",cloudStatusLabel="offline";
 const $=id=>document.getElementById(id);
-function profile(){return store.profiles.find(x=>x.id===current)||store.profiles[0]}\nfunction getActive(){return store.activeSessions?.[current]||(store.active?.profile===current?store.active:null)}
+function profile(){return store.profiles.find(x=>x.id===current)||store.profiles[0]}
+function getActive(){return store.activeSessions?.[current]||(store.active?.profile===current?store.active:null)}
 function commit(){
  if(!save(store))notify("Armazenamento cheio ou indisponível. Faça um backup e libere espaço.");
  if(cloud?.signedIn&&cloud.workspace)cloud.queue(store);
