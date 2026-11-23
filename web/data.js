@@ -1,6 +1,6 @@
 /* Forma Fitness · rotinas importadas das fichas de 30/03/2026.
    Campos: nome, grupo, warm-up, feeder, working, top, descanso, observações. */
-export const VERSION = "1.0.0";
+export const VERSION = "2.0.0";
 const mk = (name,muscle,warm,feeder,working,top,rest=120,notes="") => ({
   id: name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""),
   name,muscle,rest,notes,sets:[
