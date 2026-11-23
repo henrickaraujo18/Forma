@@ -1,0 +1,20 @@
+{
+  "id": "/web/",
+  "name": "Forma Fitness · Treino & Evolução",
+  "short_name": "Forma",
+  "description": "Treinos de Henrick e Cecília, evolução corporal e análises.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0c1211",
+  "theme_color": "#101917",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
